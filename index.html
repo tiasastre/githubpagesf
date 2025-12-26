@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON TANGLE: Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
+
+        :root {
+            --neon-blue: #00ffff;
+            --neon-pink: #ff0055;
+            --neon-green: #00ffaa;
+            --bg-color: #050505;
+            --panel-bg: rgba(10, 10, 10, 0.95);
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- ESTRUCTURA --- */
+        #main-wrapper {
+            display: flex;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #game-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- BANNERS LATERALES (Fake Ads) --- */
+        .ad-side {
+            width: 120px;
+            background: #0a0a0a;
+            border-left: 1px solid #222;
+            border-right: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 10px;
+            z-index: 2;
+        }
+
+        @media (max-width: 768px) {
+            .ad-side { display: none; }
+        }
+
+        /* --- UI LAYER (HUD) --- */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        .level-badge {
+            font-size: 14px;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 1px solid var(--neon-blue);
+            padding: 4px 12px;
+            background: rgba(0, 255, 255, 0.05);
+        }
+
+        /* --- BOTONES DE ICONOS (PAUSA / SALIR) --- */
+        .icon-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            width: 44px; height: 44px;
+            cursor: pointer;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            margin-left: 10px;
+        }
+        .icon-btn:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Icono de Pausa CSS */
+        .pause-icon {
+            width: 12px; height: 16px;
+            border-left: 4px solid #fff;
+            border-right: 4px solid #fff;
+            box-sizing: border-box;
+        }
+
+        /* --- MENÚS Y OVERLAYS --- */
+        .menu-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .menu-title {
+            font-size: 40px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 15px var(--neon-blue);
+            margin-bottom: 50px;
+            text-align: center;
+            letter-spacing: 4px;
+            line-height: 1.2;
+        }
+        
+        .menu-subtitle {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        /* BOTONES PRINCIPALES */
+        .menu-btn {
+            position: relative;
+            background: transparent;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 20px 0;
+            width: 280px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: #444;
+            transition: 0.3s;
+        }
+
+        .menu-btn:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+            background: rgba(0, 255, 255, 0.05);
+        }
+        .menu-btn:hover::before { background: var(--neon-blue); }
+
+        .btn-daily:hover {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.1);
+            background: rgba(255, 0, 85, 0.05);
+        }
+        .btn-daily:hover::before { background: var(--neon-pink); }
+
+        /* ICONOS CSS (Custom Icons) */
+        .ico-campaign {
+            width: 14px; height: 14px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            position: relative;
+        }
+        .ico-campaign::after {
+            content: ''; position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px; height: 4px;
+            background: currentColor;
+            border-radius: 50%;
+        }
+
+        .ico-daily {
+            width: 14px; height: 14px;
+            border: 2px solid currentColor;
+            border-top-width: 5px;
+            position: relative;
+        }
+        .ico-daily::after {
+            content: ''; position: absolute;
+            top: 2px; left: 2px;
+            width: 2px; height: 2px;
+            background: currentColor;
+            box-shadow: 4px 0 0 currentColor;
+        }
+
+        /* --- ESTADO DEL JUEGO (BOTÓN SIGUIENTE) --- */
+        #next-btn {
+            align-self: center;
+            background: var(--neon-blue);
+            color: #000;
+            border: none;
+            padding: 15px 50px;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-blue);
+            margin-bottom: 50px;
+            pointer-events: auto;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #next-btn.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* --- INTERSTICIAL (AD) --- */
+        #interstitial-overlay {
+            background: #fff;
+            color: #111;
+            z-index: 100;
+        }
+        .ad-box {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            margin: 20px;
+            background: #f9f9f9;
+        }
+
+        /* --- UTILIDADES --- */
+        .hidden { display: none !important; }
+        
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-wrapper">
+        <div class="ad-side">ADS</div>
+        
+        <div id="game-container">
+            <canvas id="gameCanvas"></canvas>
+            <div class="scanlines"></div>
+
+            <div id="ui-layer" class="hidden">
+                <div class="hud-top">
+                    <div class="level-badge" id="level-display">NIVEL 1</div>
+                    <button class="icon-btn" onclick="togglePause()">
+                        <div class="pause-icon"></div>
+                    </button>
+                </div>
+                
+                <div style="text-align: center; color: rgba(255,255,255,0.5); pointer-events: none;">
+                    <span id="status-text">...</span>
+                </div>
+
+                <button id="next-btn" onclick="handleNextLevel()">CONTINUAR</button>
+            </div>
+
+            <div id="main-menu" class="menu-overlay">
+                <div class="menu-title">NEON<br>TANGLE</div>
+                
+                <button class="menu-btn" onclick="startGame('campaign')">
+                    <div class="ico-campaign"></div>
+                    MODO CAMPAÑA
+                </button>
+                
+                <button class="menu-btn btn-daily" onclick="startGame('daily')">
+                    <div class="ico-daily"></div>
+                    RETO DIARIO
+                </button>
+                
+                <div style="position: absolute; bottom: 20px; color: #444; font-size: 10px;">
+                    SYSTEM V4.0 // READY
+                </div>
+            </div>
+
+            <div id="pause-menu" class="menu-overlay hidden">
+                <div class="menu-title" style="font-size: 30px;">PAUSA</div>
+                <button class="menu-btn" onclick="togglePause()">REANUDAR</button>
+                <button class="menu-btn" style="border-color: var(--neon-pink); color: var(--neon-pink);" onclick="exitToMenu()">SALIR AL MENÚ</button>
+            </div>
+
+            <div id="interstitial-overlay" class="menu-overlay hidden">
+                <div style="text-align:center">
+                    <h2 style="color:#000; margin:0;">PUBLICIDAD</h2>
+                    <div class="ad-box">
+                        <h3>COMPRA NEON SODA</h3>
+                        <p>¡Energía pixelada!</p>
+                    </div>
+                    <div style="font-size: 30px; font-weight:bold; margin: 20px;" id="ad-timer">3</div>
+                    <button id="skip-ad-btn" class="menu-btn hidden" style="background:#000; color:#fff; width: 200px;" onclick="closeAd()">CERRAR ANUNCIO</button>
+                </div>
+            </div>
+
+            <div id="daily-win" class="menu-overlay hidden">
+                <div class="menu-title" style="color: var(--neon-green)">SISTEMA<br>LIBERADO</div>
+                <div class="menu-subtitle">Vuelve mañana para un nuevo patrón</div>
+                <button class="menu-btn" onclick="exitToMenu()">MENÚ PRINCIPAL</button>
+            </div>
+
+        </div>
+        
+        <div class="ad-side">ADS</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('game-container');
+
+    // UI Referencias
+    const uiLayer = document.getElementById('ui-layer');
+    const mainMenu = document.getElementById('main-menu');
+    const pauseMenu = document.getElementById('pause-menu');
+    const nextBtn = document.getElementById('next-btn');
+    const levelDisplay = document.getElementById('level-display');
+    const statusText = document.getElementById('status-text');
+    const dailyWinScreen = document.getElementById('daily-win');
+    const interstitialOverlay = document.getElementById('interstitial-overlay');
+    const adTimerDisplay = document.getElementById('ad-timer');
+    const skipAdBtn = document.getElementById('skip-ad-btn');
+
+    // Estado Juego
+    let width, height;
+    let nodes = [];
+    let lines = [];
+    let draggedNode = null;
+    let currentLevel = 1;
+    let isLevelComplete = false;
+    let gameMode = 'campaign';
+    let isRunning = false;
+    let isPaused = false;
+
+    // Configuración Visual
+    const NODE_RADIUS = 20; 
+    const LINE_WIDTH = 3;
+    const COLOR_SAFE = '#00ffff'; 
+    const COLOR_DANGER = '#ff0055'; 
+    const COLOR_NODE = '#ffffff';
+
+    // --- RNG para Reto Diario ---
+    function seededRandom(seed) {
+        let x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+    }
+
+    // --- Inicialización ---
+    function resize() {
+        width = canvas.width = container.clientWidth;
+        height = canvas.height = container.clientHeight;
+        if (nodes.length && isRunning) keepNodesInBounds();
+        if (!isRunning && nodes.length > 0) draw(); 
+    }
+    window.addEventListener('resize', resize);
+
+    function keepNodesInBounds() {
+        nodes.forEach(n => {
+            n.x = Math.max(NODE_RADIUS, Math.min(width - NODE_RADIUS, n.x));
+            n.y = Math.max(NODE_RADIUS, Math.min(height - NODE_RADIUS, n.y));
+        });
+    }
+
+    class Node {
+        constructor(x, y) { this.x = x; this.y = y; }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, NODE_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = isLevelComplete ? COLOR_SAFE : COLOR_NODE;
+            ctx.fill();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = isLevelComplete ? COLOR_SAFE : (this === draggedNode ? '#fff' : COLOR_SAFE);
+        }
+    }
+
+    // --- Matemáticas ---
+    function orientation(p, q, r) {
+        let val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+        if (val === 0) return 0;
+        return (val > 0) ? 1 : 2;
+    }
+
+    function doIntersect(p1, q1, p2, q2) {
+        if(p1 === p2 || p1 === q2 || q1 === p2 || q1 === q2) return false;
+        let o1 = orientation(p1, q1, p2);
+        let o2 = orientation(p1, q1, q2);
+        let o3 = orientation(p2, q2, p1);
+        let o4 = orientation(p2, q2, q1);
+        if (o1 !== o2 && o3 !== o4) return true;
+        return false;
+    }
+
+    // --- Generación de Nivel Robusta ---
+    function generateLevel(lvl, isDaily) {
+        isLevelComplete = false;
+        nextBtn.classList.remove('visible');
+        statusText.innerText = "";
+        resize();
+
+        nodes = [];
+        lines = [];
+
+        let nodeCount, seed;
+
+        if (isDaily) {
+            const d = new Date();
+            seed = parseInt(d.getFullYear() + "" + (d.getMonth()+1) + "" + d.getDate());
+            nodeCount = 24; 
+            levelDisplay.innerText = "RETO " + d.getDate() + "/" + (d.getMonth()+1);
+            levelDisplay.style.borderColor = "var(--neon-pink)";
+            levelDisplay.style.color = "var(--neon-pink)";
+        } else {
+            seed = Math.random() * 10000;
+            // Curva de dificultad para 100 niveles
+            // Nivel 1: 4 nodos. Nivel 100: ~25 nodos.
+            nodeCount = Math.min(4 + Math.floor(lvl / 3), 25);
+            levelDisplay.innerText = "NIVEL " + lvl;
+            levelDisplay.style.borderColor = "var(--neon-blue)";
+            levelDisplay.style.color = "var(--neon-blue)";
+        }
+
+        const rand = () => {
+            if (isDaily) { let r = seededRandom(seed); seed++; return r; }
+            return Math.random();
+        };
+
+        // 1. Grafo Planar Base
+        const cx = width / 2;
+        const cy = height / 2;
+        const r = Math.min(width, height) / 3;
+
+        for (let i = 0; i < nodeCount; i++) {
+            const angle = (i / nodeCount) * Math.PI * 2;
+            nodes.push(new Node(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r));
+        }
+
+        // Conectar anillo
+        for (let i = 0; i < nodeCount; i++) {
+            lines.push({ a: nodes[i], b: nodes[(i + 1) % nodeCount], crossed: false });
+        }
+
+        // Conexiones internas
+        // Más conexiones = más difícil desenredar
+        let extra = isDaily ? 25 : Math.floor(lvl * 1.2); 
+        
+        let attempts = 0;
+        while (attempts < extra) {
+            let idA = Math.floor(rand() * nodeCount);
+            let offset = 2 + Math.floor(rand() * (nodeCount - 3));
+            let idB = (idA + offset) % nodeCount;
+            
+            // Evitar duplicados simples (no perfecto pero eficiente)
+            lines.push({ a: nodes[idA], b: nodes[idB], crossed: false });
+            attempts++;
+        }
+
+        // 2. SCRAMBLE (Mezclar) + Garantía de Enredo
+        let tangled = false;
+        let scrambleOps = 0;
+
+        while (!tangled && scrambleOps < 50) {
+            nodes.forEach(n => {
+                n.x = (width * 0.15) + rand() * (width * 0.7);
+                n.y = (height * 0.15) + rand() * (height * 0.7);
+            });
+            tangled = checkIntersections();
+            scrambleOps++;
+        }
+        
+        // Si sigue resuelto por milagro, forzamos cruce
+        if (!tangled && nodes.length > 3) {
+            let tx = nodes[0].x; nodes[0].x = nodes[2].x; nodes[2].x = tx;
+            let ty = nodes[0].y; nodes[0].y = nodes[2].y; nodes[2].y = ty;
+            checkIntersections();
+        }
+    }
+
+    function checkIntersections() {
+        let found = false;
+        lines.forEach(l => l.crossed = false);
+        for (let i = 0; i < lines.length; i++) {
+            for (let j = i + 1; j < lines.length; j++) {
+                if (doIntersect(lines[i].a, lines[i].b, lines[j].a, lines[j].b)) {
+                    lines[i].crossed = lines[j].crossed = true;
+                    found = true;
+                }
+            }
+        }
+        return found;
+    }
+
+    // --- Loop ---
+    function update() {
+        if (!isRunning || isPaused) return;
+
+        // Física suave de flotación
+        if (!draggedNode && !isLevelComplete) {
+            const t = Date.now() / 1000;
+            nodes.forEach((n, i) => {
+                n.x += Math.sin(t + i) * 0.05;
+                n.y += Math.cos(t + i) * 0.05;
+            });
+        }
+
+        const cross = checkIntersections();
+
+        if (!cross && !isLevelComplete) {
+            isLevelComplete = true;
+            statusText.innerText = "SISTEMA SINCRONIZADO";
+            statusText.style.color = COLOR_SAFE;
+            triggerWin();
+        }
+
+        draw();
+        requestAnimationFrame(update);
+    }
+
+    function draw() {
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.lineWidth = LINE_WIDTH;
+        ctx.lineCap = 'round';
+
+        lines.forEach(l => {
+            ctx.beginPath();
+            ctx.moveTo(l.a.x, l.a.y);
+            ctx.lineTo(l.b.x, l.b.y);
+            
+            if (l.crossed) {
+                ctx.strokeStyle = COLOR_DANGER;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = COLOR_DANGER;
+            } else {
+                ctx.strokeStyle = isLevelComplete ? COLOR_SAFE : '#222';
+                ctx.shadowBlur = isLevelComplete ? 15 : 0;
+                ctx.shadowColor = COLOR_SAFE;
+            }
+            ctx.stroke();
+        });
+
+        nodes.forEach(n => n.draw());
+    }
+
+    function triggerWin() {
+        if (gameMode === 'daily') {
+            setTimeout(() => { dailyWinScreen.classList.remove('hidden'); }, 800);
+        } else {
+            nextBtn.classList.add('visible');
+        }
+    }
+
+    // --- Flujo del Juego ---
+    function startGame(mode) {
+        gameMode = mode;
+        mainMenu.classList.add('hidden');
+        uiLayer.classList.remove('hidden');
+        isRunning = true;
+        isPaused = false;
+
+        if (mode === 'daily') {
+            generateLevel(0, true);
+        } else {
+            if (currentLevel === 1) generateLevel(1, false);
+            else generateLevel(currentLevel, false); // Mantiene nivel si venimos de pausa
+        }
+        update();
+    }
+
+    function togglePause() {
+        if (!isRunning) return;
+        isPaused = !isPaused;
+        
+        if (isPaused) {
+            pauseMenu.classList.remove('hidden');
+        } else {
+            pauseMenu.classList.add('hidden');
+            update();
+        }
+    }
+
+    function exitToMenu() {
+        isRunning = false;
+        isPaused = false;
+        uiLayer.classList.add('hidden');
+        pauseMenu.classList.add('hidden');
+        dailyWinScreen.classList.add('hidden');
+        mainMenu.classList.remove('hidden');
+    }
+
+    function handleNextLevel() {
+        // Lógica de Publicidad: Cada 3 niveles
+        if (currentLevel % 3 === 0) {
+            showAd();
+        } else {
+            nextLevelAction();
+        }
+    }
+
+    function showAd() {
+        isRunning = false;
+        interstitialOverlay.classList.remove('hidden');
+        skipAdBtn.classList.add('hidden');
+        
+        let t = 3;
+        adTimerDisplay.innerText = t;
+        
+        let interval = setInterval(() => {
+            t--;
+            adTimerDisplay.innerText = t;
+            if (t <= 0) {
+                clearInterval(interval);
+                adTimerDisplay.innerText = "";
+                skipAdBtn.classList.remove('hidden');
+            }
+        }, 1000);
+    }
+
+    function closeAd() {
+        interstitialOverlay.classList.add('hidden');
+        nextLevelAction();
+    }
+
+    function nextLevelAction() {
+        currentLevel++;
+        generateLevel(currentLevel, false);
+        isRunning = true;
+        update();
+    }
+
+    // --- Controles Touch/Mouse ---
+    function getPos(evt) {
+        const r = canvas.getBoundingClientRect();
+        const cx = evt.touches ? evt.touches[0].clientX : evt.clientX;
+        const cy = evt.touches ? evt.touches[0].clientY : evt.clientY;
+        return { x: cx - r.left, y: cy - r.top };
+    }
+
+    function handleStart(evt) {
+        if (isLevelComplete || isPaused) return;
+        const pos = getPos(evt);
+        for (let i = nodes.length - 1; i >= 0; i--) {
+            let n = nodes[i];
+            if (Math.hypot(n.x - pos.x, n.y - pos.y) < 40) { // Hitbox amplia
+                draggedNode = n;
+                break;
+            }
+        }
+    }
+
+    function handleMove(evt) {
+        if (draggedNode && !isPaused) {
+            const pos = getPos(evt);
+            draggedNode.x = Math.max(NODE_RADIUS, Math.min(width - NODE_RADIUS, pos.x));
+            draggedNode.y = Math.max(NODE_RADIUS, Math.min(height - NODE_RADIUS, pos.y));
+        }
+    }
+
+    function handleEnd() { draggedNode = null; }
+
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(e); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); }, {passive: false});
+    window.addEventListener('touchend', handleEnd);
+
+    resize();
+
+</script>
+</body>
+</html>
