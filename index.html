@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEON TANGLE: Pro</title>
+    <title>NEON TANGLE: 100 Levels</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap');
 
@@ -11,14 +11,19 @@
             --neon-blue: #00ffff;
             --neon-pink: #ff0055;
             --neon-green: #00ffaa;
-            --bg-color: #050505;
             --panel-bg: rgba(10, 10, 10, 0.95);
         }
 
         body {
             margin: 0;
             overflow: hidden;
-            background-color: var(--bg-color);
+            background-color: #050505;
+            /* BACKGROUND */
+            background-image: 
+                linear-gradient(rgba(20, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(20, 255, 255, 0.03) 1px, transparent 1px),
+                radial-gradient(circle at center, #111 0%, #000 100%);
+            background-size: 40px 40px, 40px 40px, 100% 100%;
             color: #fff;
             font-family: 'Orbitron', sans-serif;
             touch-action: none;
@@ -30,7 +35,6 @@
             -webkit-user-select: none;
         }
 
-        /* --- ESTRUCTURA --- */
         #main-wrapper {
             display: flex;
             flex: 1;
@@ -42,32 +46,15 @@
         #game-container {
             flex: 1;
             position: relative;
-            background: #000;
+            background: transparent;
             overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8) inset;
         }
 
         canvas {
             display: block;
             width: 100%;
             height: 100%;
-        }
-
-        /* --- BANNERS LATERALES (Fake Ads) --- */
-        .ad-side {
-            width: 120px;
-            background: #0a0a0a;
-            border-left: 1px solid #222;
-            border-right: 1px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-            font-size: 10px;
-            z-index: 2;
-        }
-
-        @media (max-width: 768px) {
-            .ad-side { display: none; }
         }
 
         /* --- UI LAYER (HUD) --- */
@@ -89,31 +76,37 @@
             justify-content: space-between;
             align-items: center;
             pointer-events: auto;
+            position: relative;
+            z-index: 12;
         }
 
+        #status-container {
+            position: absolute;
+            top: 80px; left: 0; width: 100%;
+            text-align: center; pointer-events: none; z-index: 11;
+        }
+
+        #status-text {
+            font-size: 24px; font-weight: 800; letter-spacing: 2px;
+            text-shadow: 0 0 10px currentColor;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        #status-text.visible { opacity: 1; }
+
         .level-badge {
-            font-size: 14px;
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border: 1px solid var(--neon-blue);
-            padding: 4px 12px;
+            font-size: 14px; color: var(--neon-blue);
+            text-transform: uppercase; letter-spacing: 2px;
+            border: 1px solid var(--neon-blue); padding: 4px 12px;
             background: rgba(0, 255, 255, 0.05);
         }
 
-        /* --- BOTONES DE ICONOS (PAUSA / SALIR) --- */
         .icon-btn {
-            background: transparent;
+            background: rgba(0,0,0,0.5);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #fff;
-            width: 44px; height: 44px;
-            cursor: pointer;
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: #fff; width: 44px; height: 44px;
+            cursor: pointer; pointer-events: auto;
+            display: flex; align-items: center; justify-content: center;
             transition: 0.3s;
-            margin-left: 10px;
         }
         .icon-btn:hover {
             border-color: var(--neon-blue);
@@ -121,168 +114,115 @@
             background: rgba(0, 255, 255, 0.1);
         }
 
-        /* Icono de Pausa CSS */
-        .pause-icon {
-            width: 12px; height: 16px;
-            border-left: 4px solid #fff;
-            border-right: 4px solid #fff;
-            box-sizing: border-box;
-        }
+        .pause-icon { width: 12px; height: 16px; border-left: 4px solid #fff; border-right: 4px solid #fff; }
+        .calendar-icon { width: 18px; height: 18px; border: 2px solid #fff; border-top-width: 6px; position: relative; }
+        .calendar-icon::before { content: ''; position: absolute; top: -8px; left: 2px; width: 2px; height: 4px; background: #fff; box-shadow: 8px 0 0 #fff; }
+        .calendar-icon::after { content: ''; position: absolute; top: 4px; left: 3px; width: 2px; height: 2px; background: #fff; box-shadow: 4px 0 0 #fff, 8px 0 0 #fff; }
 
-        /* --- MENÚS Y OVERLAYS --- */
+        /* --- MENUS --- */
         .menu-overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--panel-bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 20;
-            pointer-events: auto;
-            backdrop-filter: blur(5px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 20; pointer-events: auto;
+            backdrop-filter: blur(8px);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
+        .menu-overlay.active { opacity: 1; pointer-events: auto; }
 
         .menu-title {
-            font-size: 40px;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 15px var(--neon-blue);
-            margin-bottom: 50px;
-            text-align: center;
-            letter-spacing: 4px;
-            line-height: 1.2;
-        }
-        
-        .menu-subtitle {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 40px;
-            letter-spacing: 2px;
+            font-size: 40px; font-weight: 800; color: #fff;
+            text-shadow: 0 0 15px var(--neon-blue); margin-bottom: 30px;
+            text-align: center; letter-spacing: 4px; line-height: 1.2;
         }
 
-        /* BOTONES PRINCIPALES */
         .menu-btn {
-            position: relative;
-            background: transparent;
+            position: relative; background: transparent; border: 1px solid #444; color: #fff;
+            padding: 15px 0; width: 280px; font-family: 'Orbitron', sans-serif;
+            font-size: 16px; margin: 8px 0; cursor: pointer; text-transform: uppercase;
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 15px;
+        }
+        .menu-btn:hover { border-color: var(--neon-blue); background: rgba(0, 255, 255, 0.05); box-shadow: 0 0 15px rgba(0,255,255,0.1); }
+
+        /* GRID SELECCION NIVELES */
+        .level-grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 450px;
+            max-height: 55vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .level-grid-container::-webkit-scrollbar { width: 6px; }
+        .level-grid-container::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .level-grid-container::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+        .level-select-btn {
+            width: 55px; height: 55px;
+            background: rgba(255,255,255,0.05);
             border: 1px solid #444;
             color: #fff;
-            padding: 20px 0;
-            width: 280px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            margin: 10px 0;
+            font-family: 'Orbitron';
+            font-size: 14px;
             cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            overflow: hidden;
+            transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
         }
-
-        .menu-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 4px; height: 100%;
-            background: #444;
-            transition: 0.3s;
-        }
-
-        .menu-btn:hover {
+        .level-select-btn:hover {
             border-color: var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
-            background: rgba(0, 255, 255, 0.05);
+            background: rgba(0,255,255,0.2);
+            box-shadow: 0 0 10px var(--neon-blue);
         }
-        .menu-btn:hover::before { background: var(--neon-blue); }
-
-        .btn-daily:hover {
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.1);
-            background: rgba(255, 0, 85, 0.05);
-        }
-        .btn-daily:hover::before { background: var(--neon-pink); }
-
-        /* ICONOS CSS (Custom Icons) */
-        .ico-campaign {
-            width: 14px; height: 14px;
-            border: 2px solid currentColor;
-            border-radius: 50%;
-            position: relative;
-        }
-        .ico-campaign::after {
-            content: ''; position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 4px; height: 4px;
-            background: currentColor;
-            border-radius: 50%;
-        }
-
-        .ico-daily {
-            width: 14px; height: 14px;
-            border: 2px solid currentColor;
-            border-top-width: 5px;
-            position: relative;
-        }
-        .ico-daily::after {
-            content: ''; position: absolute;
-            top: 2px; left: 2px;
-            width: 2px; height: 2px;
-            background: currentColor;
-            box-shadow: 4px 0 0 currentColor;
-        }
-
-        /* --- ESTADO DEL JUEGO (BOTÓN SIGUIENTE) --- */
-        #next-btn {
-            align-self: center;
-            background: var(--neon-blue);
-            color: #000;
-            border: none;
-            padding: 15px 50px;
-            font-weight: bold;
-            font-size: 18px;
-            letter-spacing: 2px;
-            cursor: pointer;
-            box-shadow: 0 0 20px var(--neon-blue);
-            margin-bottom: 50px;
-            pointer-events: auto;
-            transform: translateY(20px);
-            opacity: 0;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        #next-btn.visible {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        /* --- INTERSTICIAL (AD) --- */
-        #interstitial-overlay {
-            background: #fff;
-            color: #111;
-            z-index: 100;
-        }
-        .ad-box {
-            border: 2px dashed #ccc;
-            padding: 40px;
-            margin: 20px;
-            background: #f9f9f9;
-        }
-
-        /* --- UTILIDADES --- */
-        .hidden { display: none !important; }
-        
-        .scanlines {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 5;
+        /* Locked Styles */
+        .level-select-btn.locked {
             opacity: 0.3;
+            pointer-events: none;
+            border-color: #222;
+            color: #555;
+            background: #080808;
         }
+        .level-select-btn.locked::after {
+            content: '🔒';
+            font-size: 12px;
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+        }
+        .level-select-btn.current {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .calendar-grid { display: grid; grid-template-columns: 1fr; gap: 10px; width: 300px; }
+        .day-card { background: rgba(255,255,255,0.05); border: 1px solid #333; padding: 15px; display: flex; justify-content: space-between; cursor: pointer; transition: 0.3s; }
+        .day-card:hover { border-color: var(--neon-pink); background: rgba(255,0,85,0.1); }
+
+        #next-btn {
+            align-self: center; background: var(--neon-blue); color: #000; border: none;
+            padding: 15px 50px; font-weight: bold; font-size: 18px; letter-spacing: 2px;
+            cursor: pointer; box-shadow: 0 0 20px var(--neon-blue); margin-bottom: 50px;
+            pointer-events: auto; transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+        }
+        #next-btn.visible { transform: translateY(0); opacity: 1; }
+
+        .ad-side {
+            width: 120px; background: #0a0a0a; border-left: 1px solid #222; border-right: 1px solid #222;
+            display: flex; align-items: center; justify-content: center; color: #333; font-size: 10px; z-index: 2;
+        }
+        @media (max-width: 768px) { .ad-side { display: none; } }
+        .hidden { display: none !important; }
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px; pointer-events: none; z-index: 5; opacity: 0.3;
+        }
+        
+        .ico-campaign { width: 14px; height: 14px; border: 2px solid currentColor; border-radius: 50%; position: relative; }
+        .ico-campaign::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+        .ico-daily { width: 14px; height: 14px; border: 2px solid currentColor; border-top-width: 5px; position: relative; }
     </style>
 </head>
 <body>
@@ -296,108 +236,165 @@
 
             <div id="ui-layer" class="hidden">
                 <div class="hud-top">
-                    <div class="level-badge" id="level-display">NIVEL 1</div>
-                    <button class="icon-btn" onclick="togglePause()">
-                        <div class="pause-icon"></div>
-                    </button>
+                    <div class="hud-left">
+                        <button id="btn-calendar" class="icon-btn hidden" onclick="toggleCalendar()">
+                            <div class="calendar-icon"></div>
+                        </button>
+                        <button id="btn-levels" class="icon-btn hidden" onclick="toggleCampaignMenu()">
+                            <div style="width:14px; height:14px; border:2px solid #fff; display:grid; grid-template-columns:1fr 1fr; gap:2px;">
+                                <div style="background:#fff"></div><div style="background:#fff"></div>
+                                <div style="background:#fff"></div><div style="background:#fff"></div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="level-badge" id="level-display">LEVEL 1</div>
+
+                    <div class="hud-right">
+                        <button class="icon-btn" onclick="togglePause()">
+                            <div class="pause-icon"></div>
+                        </button>
+                    </div>
                 </div>
                 
-                <div style="text-align: center; color: rgba(255,255,255,0.5); pointer-events: none;">
+                <div id="status-container">
                     <span id="status-text">...</span>
                 </div>
 
-                <button id="next-btn" onclick="handleNextLevel()">CONTINUAR</button>
+                <button id="next-btn" onclick="handleNextLevel()">NEXT LEVEL</button>
             </div>
 
-            <div id="main-menu" class="menu-overlay">
+            <div id="main-menu" class="menu-overlay active">
                 <div class="menu-title">NEON<br>TANGLE</div>
-                
-                <button class="menu-btn" onclick="startGame('campaign')">
-                    <div class="ico-campaign"></div>
-                    MODO CAMPAÑA
+                <button class="menu-btn" onclick="toggleCampaignMenu()">
+                    <div class="ico-campaign"></div> CAMPAIGN MODE
                 </button>
-                
                 <button class="menu-btn btn-daily" onclick="startGame('daily')">
-                    <div class="ico-daily"></div>
-                    RETO DIARIO
+                    <div class="ico-daily"></div> DAILY CHALLENGE
                 </button>
-                
                 <div style="position: absolute; bottom: 20px; color: #444; font-size: 10px;">
-                    SYSTEM V4.0 // READY
+                    SYSTEM: 100 LEVELS | PROGRESS SAVED
                 </div>
             </div>
 
-            <div id="pause-menu" class="menu-overlay hidden">
-                <div class="menu-title" style="font-size: 30px;">PAUSA</div>
-                <button class="menu-btn" onclick="togglePause()">REANUDAR</button>
-                <button class="menu-btn" style="border-color: var(--neon-pink); color: var(--neon-pink);" onclick="exitToMenu()">SALIR AL MENÚ</button>
-            </div>
-
-            <div id="interstitial-overlay" class="menu-overlay hidden">
-                <div style="text-align:center">
-                    <h2 style="color:#000; margin:0;">PUBLICIDAD</h2>
-                    <div class="ad-box">
-                        <h3>COMPRA NEON SODA</h3>
-                        <p>¡Energía pixelada!</p>
+            <div id="campaign-menu" class="menu-overlay">
+                <div class="menu-title" style="font-size: 24px; color: var(--neon-blue);">DATABASE</div>
+                <div style="margin-bottom: 10px; font-size: 12px; color: #aaa;">Complete levels to unlock</div>
+                <div class="level-grid-container" id="level-grid">
                     </div>
-                    <div style="font-size: 30px; font-weight:bold; margin: 20px;" id="ad-timer">3</div>
-                    <button id="skip-ad-btn" class="menu-btn hidden" style="background:#000; color:#fff; width: 200px;" onclick="closeAd()">CERRAR ANUNCIO</button>
+                <button class="menu-btn" style="margin-top: 20px; border-color: #666;" onclick="backToMainFromCampaign()">
+                    BACK
+                </button>
+            </div>
+
+            <div id="calendar-menu" class="menu-overlay">
+                <div class="menu-title" style="font-size: 28px; margin-bottom: 30px; color: var(--neon-pink);">
+                    ARCHIVE
                 </div>
+                <div class="calendar-grid" id="calendar-list"></div>
+                <button class="menu-btn" style="margin-top: 30px; border-color: #666;" onclick="toggleCalendar()">
+                    BACK
+                </button>
             </div>
 
-            <div id="daily-win" class="menu-overlay hidden">
-                <div class="menu-title" style="color: var(--neon-green)">SISTEMA<br>LIBERADO</div>
-                <div class="menu-subtitle">Vuelve mañana para un nuevo patrón</div>
-                <button class="menu-btn" onclick="exitToMenu()">MENÚ PRINCIPAL</button>
+            <div id="pause-menu" class="menu-overlay">
+                <div class="menu-title" style="font-size: 30px;">PAUSED</div>
+                <button class="menu-btn" onclick="togglePause()">RESUME</button>
+                <button class="menu-btn" style="border-color: var(--neon-pink); color: var(--neon-pink);" onclick="exitToMenu()">EXIT TO MENU</button>
             </div>
 
+            <div id="daily-win" class="menu-overlay">
+                <div class="menu-title" style="color: var(--neon-green)">SYSTEM<br>UNLOCKED</div>
+                <div class="menu-subtitle" style="color:#aaa; text-align:center; margin-bottom: 20px;">Log entry complete</div>
+                <button class="menu-btn" onclick="exitToMenu()">MAIN MENU</button>
+            </div>
         </div>
         
         <div class="ad-side">ADS</div>
     </div>
 
 <script>
+    /* --- STORAGE MANAGER --- */
+    // Recuperamos el nivel desbloqueado del localStorage (por defecto es 1)
+    let maxUnlockedLevel = parseInt(localStorage.getItem('neonTangle_maxLevel')) || 1;
+
+    function saveProgress(lvl) {
+        if (lvl > maxUnlockedLevel) {
+            maxUnlockedLevel = lvl;
+            localStorage.setItem('neonTangle_maxLevel', maxUnlockedLevel);
+        }
+    }
+
+    /* --- AUDIO --- */
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'grab') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+            gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'click') {
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(200, now);
+            gainNode.gain.setValueAtTime(0.05, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now); osc.stop(now + 0.05);
+        } else if (type === 'win') {
+            playTone(440, 'triangle', now, 0.1); playTone(554, 'triangle', now + 0.1, 0.1); playTone(659, 'triangle', now + 0.2, 0.4); 
+        }
+    }
+    function playTone(f,t,s,d){const o=audioCtx.createOscillator();const g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(0.1,s);g.gain.exponentialRampToValueAtTime(0.01,s+d);o.start(s);o.stop(s+d);}
+
+    /* --- GAME ENGINE --- */
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     const container = document.getElementById('game-container');
 
-    // UI Referencias
+    // UI Elements
     const uiLayer = document.getElementById('ui-layer');
     const mainMenu = document.getElementById('main-menu');
     const pauseMenu = document.getElementById('pause-menu');
+    const calendarMenu = document.getElementById('calendar-menu');
+    const campaignMenu = document.getElementById('campaign-menu');
+    const dailyWinScreen = document.getElementById('daily-win');
     const nextBtn = document.getElementById('next-btn');
     const levelDisplay = document.getElementById('level-display');
     const statusText = document.getElementById('status-text');
-    const dailyWinScreen = document.getElementById('daily-win');
-    const interstitialOverlay = document.getElementById('interstitial-overlay');
-    const adTimerDisplay = document.getElementById('ad-timer');
-    const skipAdBtn = document.getElementById('skip-ad-btn');
+    const btnCalendar = document.getElementById('btn-calendar');
+    const btnLevels = document.getElementById('btn-levels');
 
-    // Estado Juego
+    // Variables
     let width, height;
     let nodes = [];
     let lines = [];
     let draggedNode = null;
     let currentLevel = 1;
     let isLevelComplete = false;
+    let isCurrentlyClean = false; 
     let gameMode = 'campaign';
     let isRunning = false;
     let isPaused = false;
+    let currentDailyDate = new Date();
+    let frameCounter = 0;
 
-    // Configuración Visual
-    const NODE_RADIUS = 20; 
+    // Config
+    const NODE_RADIUS = 10;
     const LINE_WIDTH = 3;
-    const COLOR_SAFE = '#00ffff'; 
+    const COLOR_SAFE = '#00ffaa'; 
     const COLOR_DANGER = '#ff0055'; 
     const COLOR_NODE = '#ffffff';
 
-    // --- RNG para Reto Diario ---
     function seededRandom(seed) {
         let x = Math.sin(seed++) * 10000;
         return x - Math.floor(x);
     }
 
-    // --- Inicialización ---
     function resize() {
         width = canvas.width = container.clientWidth;
         height = canvas.height = container.clientHeight;
@@ -418,14 +415,17 @@
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, NODE_RADIUS, 0, Math.PI * 2);
-            ctx.fillStyle = isLevelComplete ? COLOR_SAFE : COLOR_NODE;
+            ctx.fillStyle = isCurrentlyClean ? COLOR_SAFE : COLOR_NODE;
             ctx.fill();
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = isLevelComplete ? COLOR_SAFE : (this === draggedNode ? '#fff' : COLOR_SAFE);
+            if (this === draggedNode || isCurrentlyClean) {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, NODE_RADIUS + 4, 0, Math.PI * 2);
+                ctx.strokeStyle = isCurrentlyClean ? COLOR_SAFE : '#fff';
+                ctx.lineWidth = 1; ctx.stroke();
+            }
         }
     }
 
-    // --- Matemáticas ---
     function orientation(p, q, r) {
         let val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
         if (val === 0) return 0;
@@ -433,134 +433,158 @@
     }
 
     function doIntersect(p1, q1, p2, q2) {
-        if(p1 === p2 || p1 === q2 || q1 === p2 || q1 === q2) return false;
-        let o1 = orientation(p1, q1, p2);
-        let o2 = orientation(p1, q1, q2);
-        let o3 = orientation(p2, q2, p1);
-        let o4 = orientation(p2, q2, q1);
+        if (Math.max(p1.x, q1.x) < Math.min(p2.x, q2.x) ||
+            Math.min(p1.x, q1.x) > Math.max(p2.x, q2.x) ||
+            Math.max(p1.y, q1.y) < Math.min(p2.y, q2.y) ||
+            Math.min(p1.y, q1.y) > Math.max(p2.y, q2.y)) {
+            return false;
+        }
+        let o1 = orientation(p1, q1, p2); let o2 = orientation(p1, q1, q2);
+        let o3 = orientation(p2, q2, p1); let o4 = orientation(p2, q2, q1);
         if (o1 !== o2 && o3 !== o4) return true;
         return false;
     }
 
-    // --- Generación de Nivel Robusta ---
-    function generateLevel(lvl, isDaily) {
+    function generateLevel(lvl, isDaily, customDate = null) {
         isLevelComplete = false;
+        isCurrentlyClean = false;
         nextBtn.classList.remove('visible');
+        statusText.classList.remove('visible');
         statusText.innerText = "";
+        nodes = []; lines = [];
         resize();
-
-        nodes = [];
-        lines = [];
 
         let nodeCount, seed;
 
         if (isDaily) {
-            const d = new Date();
+            const d = customDate || new Date();
+            currentDailyDate = new Date(d);
             seed = parseInt(d.getFullYear() + "" + (d.getMonth()+1) + "" + d.getDate());
-            nodeCount = 24; 
-            levelDisplay.innerText = "RETO " + d.getDate() + "/" + (d.getMonth()+1);
+            let rnd = seededRandom(seed); seed++; 
+            nodeCount = 30 + Math.floor(rnd * 16);
+            
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            levelDisplay.innerText = `CHALLENGE ${day}/${month}`;
             levelDisplay.style.borderColor = "var(--neon-pink)";
             levelDisplay.style.color = "var(--neon-pink)";
         } else {
-            seed = Math.random() * 10000;
-            // Curva de dificultad para 100 niveles
-            // Nivel 1: 4 nodos. Nivel 100: ~25 nodos.
-            nodeCount = Math.min(4 + Math.floor(lvl / 3), 25);
-            levelDisplay.innerText = "NIVEL " + lvl;
+            // CAMPAIGN 1-100
+            seed = lvl * 777; // Fixed seed
+            currentLevel = lvl;
+            
+            // Formula for 100 levels
+            nodeCount = Math.min(5 + Math.floor(lvl / 2.5), 35);
+            
+            levelDisplay.innerText = "LEVEL " + lvl;
             levelDisplay.style.borderColor = "var(--neon-blue)";
             levelDisplay.style.color = "var(--neon-blue)";
         }
 
         const rand = () => {
-            if (isDaily) { let r = seededRandom(seed); seed++; return r; }
-            return Math.random();
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
         };
 
-        // 1. Grafo Planar Base
-        const cx = width / 2;
-        const cy = height / 2;
-        const r = Math.min(width, height) / 3;
+        const cx = width / 2; const cy = height / 2;
+        const r = Math.min(width, height) / 2.5;
 
         for (let i = 0; i < nodeCount; i++) {
             const angle = (i / nodeCount) * Math.PI * 2;
             nodes.push(new Node(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r));
         }
-
-        // Conectar anillo
         for (let i = 0; i < nodeCount; i++) {
             lines.push({ a: nodes[i], b: nodes[(i + 1) % nodeCount], crossed: false });
         }
 
-        // Conexiones internas
-        // Más conexiones = más difícil desenredar
-        let extra = isDaily ? 25 : Math.floor(lvl * 1.2); 
-        
+        let extra = isDaily ? 12 : Math.min(Math.floor(nodeCount), 18); 
         let attempts = 0;
-        while (attempts < extra) {
-            let idA = Math.floor(rand() * nodeCount);
-            let offset = 2 + Math.floor(rand() * (nodeCount - 3));
-            let idB = (idA + offset) % nodeCount;
-            
-            // Evitar duplicados simples (no perfecto pero eficiente)
-            lines.push({ a: nodes[idA], b: nodes[idB], crossed: false });
-            attempts++;
-        }
-
-        // 2. SCRAMBLE (Mezclar) + Garantía de Enredo
-        let tangled = false;
-        let scrambleOps = 0;
-
-        while (!tangled && scrambleOps < 50) {
-            nodes.forEach(n => {
-                n.x = (width * 0.15) + rand() * (width * 0.7);
-                n.y = (height * 0.15) + rand() * (height * 0.7);
-            });
-            tangled = checkIntersections();
-            scrambleOps++;
-        }
         
-        // Si sigue resuelto por milagro, forzamos cruce
-        if (!tangled && nodes.length > 3) {
-            let tx = nodes[0].x; nodes[0].x = nodes[2].x; nodes[2].x = tx;
-            let ty = nodes[0].y; nodes[0].y = nodes[2].y; nodes[2].y = ty;
-            checkIntersections();
+        while (attempts < 500 && extra > 0) {
+            attempts++;
+            let idA = Math.floor(rand() * nodeCount);
+            let idB = Math.floor(rand() * nodeCount);
+
+            if (idA === idB || Math.abs(idA - idB) === 1 || Math.abs(idA - idB) === nodeCount - 1) continue;
+            let exists = false;
+            for(let k=0; k<lines.length; k++){
+                if((lines[k].a === nodes[idA] && lines[k].b === nodes[idB]) || 
+                   (lines[k].a === nodes[idB] && lines[k].b === nodes[idA])) { exists = true; break; }
+            }
+            if (exists) continue;
+
+            let intersects = false;
+            for (let l of lines) {
+                if (l.a === nodes[idA] || l.b === nodes[idA] || l.a === nodes[idB] || l.b === nodes[idB]) continue;
+                if (doIntersect(nodes[idA], nodes[idB], l.a, l.b)) { intersects = true; break; }
+            }
+
+            if (!intersects) {
+                lines.push({ a: nodes[idA], b: nodes[idB], crossed: false });
+                extra--;
+            }
         }
+
+        nodes.forEach(n => {
+            n.x = (width * 0.15) + rand() * (width * 0.7);
+            n.y = (height * 0.15) + rand() * (height * 0.7);
+        });
+        
+        checkIntersections(true);
     }
 
-    function checkIntersections() {
+    function checkIntersections(force = false) {
+        if (!force && frameCounter % 4 !== 0) return isCurrentlyClean ? false : true; 
+
         let found = false;
-        lines.forEach(l => l.crossed = false);
+        for(let k=0; k<lines.length; k++) lines[k].crossed = false;
+
         for (let i = 0; i < lines.length; i++) {
             for (let j = i + 1; j < lines.length; j++) {
+                if (lines[i].a === lines[j].a || lines[i].a === lines[j].b || 
+                    lines[i].b === lines[j].a || lines[i].b === lines[j].b) continue;
+
                 if (doIntersect(lines[i].a, lines[i].b, lines[j].a, lines[j].b)) {
-                    lines[i].crossed = lines[j].crossed = true;
-                    found = true;
+                    lines[i].crossed = true; lines[j].crossed = true; found = true;
                 }
             }
         }
         return found;
     }
 
-    // --- Loop ---
     function update() {
         if (!isRunning || isPaused) return;
 
-        // Física suave de flotación
-        if (!draggedNode && !isLevelComplete) {
+        frameCounter++;
+        const disablePhysics = (draggedNode && gameMode === 'daily');
+
+        if (!isLevelComplete && !disablePhysics) {
             const t = Date.now() / 1000;
-            nodes.forEach((n, i) => {
-                n.x += Math.sin(t + i) * 0.05;
-                n.y += Math.cos(t + i) * 0.05;
-            });
+            let step = (nodes.length > 30) ? 2 : 1; 
+            for(let i=0; i<nodes.length; i+=step) {
+                if(nodes[i] !== draggedNode) {
+                    nodes[i].x += Math.sin(t + i) * 0.05;
+                    nodes[i].y += Math.cos(t + i) * 0.05;
+                }
+            }
         }
 
-        const cross = checkIntersections();
-
-        if (!cross && !isLevelComplete) {
-            isLevelComplete = true;
-            statusText.innerText = "SISTEMA SINCRONIZADO";
-            statusText.style.color = COLOR_SAFE;
-            triggerWin();
+        const hasIntersections = checkIntersections();
+        
+        if (!hasIntersections) {
+            if(!isCurrentlyClean) {
+                isCurrentlyClean = true;
+                statusText.innerText = ">> SYSTEM SYNCHRONIZED <<";
+                statusText.style.color = COLOR_SAFE;
+                statusText.classList.add('visible');
+                if (gameMode !== 'daily' && !isLevelComplete) nextBtn.classList.add('visible');
+            }
+        } else {
+            if(isCurrentlyClean) {
+                isCurrentlyClean = false;
+                statusText.classList.remove('visible');
+                if (!isLevelComplete) nextBtn.classList.remove('visible');
+            }
         }
 
         draw();
@@ -568,119 +592,205 @@
     }
 
     function draw() {
-        ctx.fillStyle = '#050505';
+        ctx.clearRect(0,0,width,height);
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.4)'; 
         ctx.fillRect(0, 0, width, height);
-
-        ctx.lineWidth = LINE_WIDTH;
+        
+        ctx.shadowBlur = 0; 
         ctx.lineCap = 'round';
-
+        
         lines.forEach(l => {
-            ctx.beginPath();
-            ctx.moveTo(l.a.x, l.a.y);
+            ctx.beginPath(); 
+            ctx.moveTo(l.a.x, l.a.y); 
             ctx.lineTo(l.b.x, l.b.y);
             
             if (l.crossed) {
-                ctx.strokeStyle = COLOR_DANGER;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = COLOR_DANGER;
+                ctx.lineWidth = LINE_WIDTH + 2; ctx.strokeStyle = "rgba(255, 0, 85, 0.3)"; ctx.stroke();
+                ctx.lineWidth = LINE_WIDTH; ctx.strokeStyle = COLOR_DANGER; ctx.stroke();
             } else {
-                ctx.strokeStyle = isLevelComplete ? COLOR_SAFE : '#222';
-                ctx.shadowBlur = isLevelComplete ? 15 : 0;
-                ctx.shadowColor = COLOR_SAFE;
+                let col = isCurrentlyClean ? COLOR_SAFE : '#444';
+                if(isCurrentlyClean) {
+                    ctx.lineWidth = LINE_WIDTH + 4; ctx.strokeStyle = "rgba(0, 255, 170, 0.2)"; ctx.stroke();
+                }
+                ctx.lineWidth = LINE_WIDTH; ctx.strokeStyle = col; ctx.stroke();
             }
-            ctx.stroke();
         });
-
+        
         nodes.forEach(n => n.draw());
     }
 
     function triggerWin() {
+        isLevelComplete = true; 
+        playSound('win');
+        checkIntersections(true);
+        draw();
+        
         if (gameMode === 'daily') {
-            setTimeout(() => { dailyWinScreen.classList.remove('hidden'); }, 800);
+            setTimeout(() => { dailyWinScreen.classList.add('active'); }, 500);
         } else {
+            // UNLOCK NEXT LEVEL
+            if (currentLevel === maxUnlockedLevel && currentLevel < 100) {
+                saveProgress(currentLevel + 1);
+            }
             nextBtn.classList.add('visible');
         }
     }
 
-    // --- Flujo del Juego ---
-    function startGame(mode) {
+    /* --- MENU LOGIC --- */
+
+    function startGame(mode, startLvl = 1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        playSound('click');
         gameMode = mode;
-        mainMenu.classList.add('hidden');
+        
+        mainMenu.classList.remove('active');
+        campaignMenu.classList.remove('active');
         uiLayer.classList.remove('hidden');
-        isRunning = true;
-        isPaused = false;
+        dailyWinScreen.classList.remove('active');
+        pauseMenu.classList.remove('active');
+        calendarMenu.classList.remove('active');
 
         if (mode === 'daily') {
-            generateLevel(0, true);
+            btnCalendar.classList.remove('hidden');
+            btnLevels.classList.add('hidden');
+            generateLevel(0, true, new Date());
         } else {
-            if (currentLevel === 1) generateLevel(1, false);
-            else generateLevel(currentLevel, false); // Mantiene nivel si venimos de pausa
+            btnCalendar.classList.add('hidden');
+            btnLevels.classList.remove('hidden');
+            generateLevel(startLvl, false);
         }
+        
+        isRunning = true; isPaused = false;
         update();
     }
 
-    function togglePause() {
-        if (!isRunning) return;
-        isPaused = !isPaused;
+    function toggleCampaignMenu() {
+        playSound('click');
         
-        if (isPaused) {
-            pauseMenu.classList.remove('hidden');
+        if (campaignMenu.classList.contains('active')) {
+            campaignMenu.classList.remove('active');
+            if (isRunning) { isPaused = false; update(); }
+            else { mainMenu.classList.add('active'); }
         } else {
-            pauseMenu.classList.add('hidden');
+            mainMenu.classList.remove('active');
+            pauseMenu.classList.remove('active');
+            isPaused = true;
+            renderLevelGrid();
+            campaignMenu.classList.add('active');
+        }
+    }
+
+    function renderLevelGrid() {
+        const grid = document.getElementById('level-grid');
+        grid.innerHTML = '';
+        
+        // 100 Levels
+        for (let i = 1; i <= 100; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'level-select-btn';
+            btn.innerText = i;
+            
+            // Lock Logic
+            if (i > maxUnlockedLevel) {
+                btn.classList.add('locked');
+            } else {
+                btn.onclick = () => { startGame('campaign', i); };
+            }
+
+            // Visual Marker
+            if (gameMode === 'campaign' && i === currentLevel && isRunning) {
+                btn.classList.add('current');
+            }
+
+            grid.appendChild(btn);
+        }
+    }
+
+    function backToMainFromCampaign() {
+        playSound('click');
+        campaignMenu.classList.remove('active');
+        if (!isRunning) {
+            mainMenu.classList.add('active');
+        } else {
+            isPaused = false;
             update();
         }
     }
 
-    function exitToMenu() {
-        isRunning = false;
-        isPaused = false;
-        uiLayer.classList.add('hidden');
-        pauseMenu.classList.add('hidden');
-        dailyWinScreen.classList.add('hidden');
-        mainMenu.classList.remove('hidden');
-    }
-
-    function handleNextLevel() {
-        // Lógica de Publicidad: Cada 3 niveles
-        if (currentLevel % 3 === 0) {
-            showAd();
+    /* --- OTHER --- */
+    function toggleCalendar() {
+        playSound('click');
+        if (calendarMenu.classList.contains('active')) {
+            calendarMenu.classList.remove('active');
+            isPaused = false; update();
         } else {
-            nextLevelAction();
+            isPaused = true; renderCalendarDays();
+            calendarMenu.classList.add('active');
         }
     }
 
-    function showAd() {
-        isRunning = false;
-        interstitialOverlay.classList.remove('hidden');
-        skipAdBtn.classList.add('hidden');
+    function renderCalendarDays() {
+        const list = document.getElementById('calendar-list');
+        list.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            const d = new Date(); d.setDate(d.getDate() - i);
+            const dayStr = String(d.getDate()).padStart(2, '0');
+            const monthStr = String(d.getMonth() + 1).padStart(2, '0');
+            const isToday = (i === 0);
+            
+            const item = document.createElement('div');
+            item.className = 'day-card';
+            if (isToday) item.classList.add('today');
+
+            const isCurrentPlaying = (d.getDate() === currentDailyDate.getDate());
+            const statusLabel = isCurrentPlaying ? "PLAYING" : (isToday ? "AVAILABLE" : "ARCHIVE");
+            const statusColor = isCurrentPlaying ? "var(--neon-green)" : "#666";
+
+            item.innerHTML = `<div class="day-date">${isToday ? 'TODAY' : ''} ${dayStr}/${monthStr}</div><div class="day-status" style="color:${statusColor}; border: 1px solid ${statusColor}">${statusLabel}</div>`;
+            item.onclick = () => { loadDailyFromCalendar(d); };
+            list.appendChild(item);
+        }
+    }
+
+    function loadDailyFromCalendar(dateObj) {
+        playSound('click');
+        calendarMenu.classList.remove('active');
+        generateLevel(0, true, dateObj);
+        isRunning = true; isPaused = false; update();
+    }
+
+    function togglePause() {
+        playSound('click');
+        if (!isRunning) return;
+        isPaused = !isPaused;
+        if (isPaused) pauseMenu.classList.add('active');
+        else { pauseMenu.classList.remove('active'); update(); }
+    }
+
+    function exitToMenu() {
+        playSound('click');
+        isRunning = false; isPaused = false;
+        uiLayer.classList.add('hidden');
+        pauseMenu.classList.remove('active');
+        dailyWinScreen.classList.remove('active');
+        calendarMenu.classList.remove('active');
+        campaignMenu.classList.remove('active');
+        mainMenu.classList.add('active');
+    }
+
+    function handleNextLevel() { 
+        playSound('click'); 
+        // Save progress if on max unlocked level
+        if (currentLevel === maxUnlockedLevel) {
+            saveProgress(currentLevel + 1);
+        }
         
-        let t = 3;
-        adTimerDisplay.innerText = t;
-        
-        let interval = setInterval(() => {
-            t--;
-            adTimerDisplay.innerText = t;
-            if (t <= 0) {
-                clearInterval(interval);
-                adTimerDisplay.innerText = "";
-                skipAdBtn.classList.remove('hidden');
-            }
-        }, 1000);
+        currentLevel++; 
+        if(currentLevel > 100) currentLevel = 100; // Cap at 100
+        generateLevel(currentLevel, false); 
+        isRunning = true; update(); 
     }
 
-    function closeAd() {
-        interstitialOverlay.classList.add('hidden');
-        nextLevelAction();
-    }
-
-    function nextLevelAction() {
-        currentLevel++;
-        generateLevel(currentLevel, false);
-        isRunning = true;
-        update();
-    }
-
-    // --- Controles Touch/Mouse ---
     function getPos(evt) {
         const r = canvas.getBoundingClientRect();
         const cx = evt.touches ? evt.touches[0].clientX : evt.clientX;
@@ -693,33 +803,30 @@
         const pos = getPos(evt);
         for (let i = nodes.length - 1; i >= 0; i--) {
             let n = nodes[i];
-            if (Math.hypot(n.x - pos.x, n.y - pos.y) < 40) { // Hitbox amplia
-                draggedNode = n;
-                break;
-            }
+            if (Math.hypot(n.x - pos.x, n.y - pos.y) < 40) { draggedNode = n; playSound('grab'); break; }
         }
     }
-
     function handleMove(evt) {
-        if (draggedNode && !isPaused) {
+        if (draggedNode && !isPaused && !isLevelComplete) {
             const pos = getPos(evt);
             draggedNode.x = Math.max(NODE_RADIUS, Math.min(width - NODE_RADIUS, pos.x));
             draggedNode.y = Math.max(NODE_RADIUS, Math.min(height - NODE_RADIUS, pos.y));
         }
     }
-
-    function handleEnd() { draggedNode = null; }
+    function handleEnd() { 
+        draggedNode = null; 
+        const finalCheck = checkIntersections(true);
+        if (!finalCheck && !isLevelComplete) { triggerWin(); }
+    }
 
     canvas.addEventListener('mousedown', handleStart);
     canvas.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleEnd);
-
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleStart(e); }, {passive: false});
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); }, {passive: false});
     window.addEventListener('touchend', handleEnd);
 
     resize();
-
 </script>
 </body>
 </html>
